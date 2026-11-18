@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Loom Part 2 — Interactive QR Icebreaker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=JetBrains+Mono:wght@600;800&family=Plus+Jakarta+Sans:wght@500;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-obsidian: #13072E;
+            --purple-electric: #7C3AED;
+            --purple-neon: #A855F7;
+            --pink-hot: #EC4899;
+        }
+
+        body {
+            background-color: var(--bg-obsidian);
+            color: #FFFFFF;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            overflow-x: hidden;
+        }
+
+        .font-display {
+            font-family: 'Archivo Black', sans-serif;
+            letter-spacing: -0.02em;
+        }
+
+        .font-mono-code {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Glowing Neon Borders & Effects */
+        .neon-card {
+            background: rgba(24, 9, 58, 0.85);
+            border: 2px solid rgba(168, 85, 247, 0.55);
+            box-shadow: 0 0 40px rgba(124, 58, 237, 0.4), inset 0 0 20px rgba(236, 72, 153, 0.15);
+        }
+
+        .qr-frame {
+            background: #FFFFFF;
+            padding: 18px;
+            border-radius: 24px;
+            box-shadow: 0 0 45px rgba(236, 72, 153, 0.65), 0 0 80px rgba(168, 85, 247, 0.45);
+            border: 4px solid #EC4899;
+        }
+
+        /* Animated Ocean Waves & Boat Bobbing */
+        @keyframes boatBob {
+            0%, 100% { transform: translateY(0px) rotate(-2deg); }
+            50% { transform: translateY(-10px) rotate(2.5deg); }
+        }
+
+        @keyframes hookSwing {
+            0%, 100% { transform: rotate(-6deg); }
+            50% { transform: rotate(7deg); }
+        }
+
+        @keyframes waveShift {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+
+        @keyframes stampPulse {
+            0%, 100% { transform: rotate(-6deg) scale(1); }
+            50% { transform: rotate(-4deg) scale(1.05); }
+        }
+
+        .animate-boat {
+            transform-origin: 220px 210px;
+            animation: boatBob 4.2s ease-in-out infinite;
+        }
+
+        .animate-hook {
+            transform-origin: 365px 95px;
+            animation: hookSwing 3.4s ease-in-out infinite;
+        }
+
+        .animate-wave-slow {
+            animation: waveShift 14s linear infinite;
+        }
+
+        .animate-wave-fast {
+            animation: waveShift 9s linear infinite;
+        }
+
+        .phishing-stamp {
+            animation: stampPulse 2.4s ease-in-out infinite;
+            text-shadow: 0 0 25px rgba(236, 72, 153, 0.9);
+        }
+
+        /* Floating Caught Emoji Particle */
+        .fish-particle {
+            position: fixed;
+            pointer-events: none;
+            font-size: 2rem;
+            z-index: 60;
+            animation: flyUp 1.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes flyUp {
+            0% { transform: translateY(0) scale(0.6) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(-220px) scale(1.4) rotate(25deg); opacity: 0; }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- ===================================================================== -->
+    <!-- MAIN VIEW: "YOU TRUST TOO EASILY" PHISHING LANDING PAGE + QR FOOTER   -->
+    <!-- ===================================================================== -->
+    <main class="flex-1 relative flex flex-col items-center justify-between p-4 sm:p-8 overflow-hidden">
+
+        <!-- Full-Screen Animated Fisherman & Neon Waves SVG Background -->
+        <div class="absolute inset-0 pointer-events-none overflow-hidden">
+            <svg viewBox="0 0 1200 700" preserveAspectRatio="xMidYMid slice" class="w-full h-full">
+                <defs>
+                    <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="#0C0320" />
+                        <stop offset="55%" stop-color="#1E084B" />
+                        <stop offset="100%" stop-color="#3B0D7A" />
+                    </linearGradient>
+                    <linearGradient id="moonGrad" x1="0" y1="0" x2="1" y2="1">
+                        <stop offset="0%" stop-color="#F472B6" />
+                        <stop offset="100%" stop-color="#A855F7" />
+                    </linearGradient>
+                    <linearGradient id="waveFront" x1="0" y1="0" x2="1" y2="0">
+                        <stop offset="0%" stop-color="#7C3AED" stop-opacity="0.85" />
+                        <stop offset="50%" stop-color="#EC4899" stop-opacity="0.85" />
+                        <stop offset="100%" stop-color="#7C3AED" stop-opacity="0.85" />
+                    </linearGradient>
+                    <filter id="neonGlow" x="-30%" y="-30%" width="160%" height="160%">
+                        <feGaussianBlur stdDeviation="8" result="blur" />
+                        <feMerge>
+                            <feMergeNode in="blur" />
+                            <feMergeNode in="SourceGraphic" />
+                        </feMerge>
+                    </filter>
+                </defs>
+
+                <!-- Midnight Purple Sky -->
+                <rect width="1200" height="700" fill="url(#skyGrad)" />
+
+                <!-- Giant Neon Cyberpunk Moon -->
+                <circle cx="920" cy="170" r="95" fill="url(#moonGrad)" opacity="0.25" filter="url(#neonGlow)" />
+                <circle cx="920" cy="170" r="72" fill="url(#moonGrad)" opacity="0.45" />
+
+                <!-- Subtle Stars -->
+                <g fill="#E9D5FF" opacity="0.65">
+                    <circle cx="140" cy="95" r="2.5" />
+                    <circle cx="290" cy="65" r="3" />
+                    <circle cx="510" cy="110" r="2" />
+                    <circle cx="680" cy="70" r="3.5" />
+                    <circle cx="1080" cy="120" r="2.5" />
+                    <circle cx="1020" cy="280" r="2" />
+                </g>
+
+                <!-- Stylized Fisherman in Boat Casting Line -->
+                <g class="animate-boat" transform="translate(80, 210)">
+                    <!-- Boat Hull -->
+                    <path d="M 80 230 L 310 230 L 275 275 L 115 275 Z" fill="#18073B" stroke="#C084FC" stroke-width="4" filter="url(#neonGlow)" />
+                    <line x1="95" y1="245" x2="295" y2="245" stroke="#EC4899" stroke-width="3" />
+
+                    <!-- Fisherman Silhouette with Neon Outline -->
+                    <!-- Torso -->
+                    <path d="M 185 230 L 195 165 L 225 168 L 220 230 Z" fill="#2E1065" stroke="#E879F9" stroke-width="3" />
+                    <!-- Head & Bucket Hat -->
+                    <circle cx="212" cy="145" r="16" fill="#2E1065" stroke="#E879F9" stroke-width="3" />
+                    <path d="M 188 136 Q 212 118 238 136 Z" fill="#EC4899" />
+                    <line x1="182" y1="136" x2="244" y2="136" stroke="#F472B6" stroke-width="3" stroke-linecap="round" />
+
+                    <!-- Arms holding Fishing Rod -->
+                    <path d="M 218 178 L 250 185 L 242 198" fill="none" stroke="#E879F9" stroke-width="4" stroke-linecap="round" />
+
+                    <!-- Curved Fishing Rod -->
+                    <path d="M 235 198 Q 305 125 365 95" fill="none" stroke="#38BDF8" stroke-width="4.5" stroke-linecap="round" filter="url(#neonGlow)" />
+
+                    <!-- Swinging Fishing Line + Hook + "FREE JAVA JOKE" Lure -->
+                    <g class="animate-hook">
+                        <line x1="365" y1="95" x2="365" y2="235" stroke="#E0F2FE" stroke-width="2" stroke-dasharray="4 3" />
+                        <!-- Neon Lure Tag -->
+                        <rect x="315" y="165" width="100" height="24" rx="8" fill="#EC4899" stroke="#FFFFFF" stroke-width="1.5" />
+                        <text x="365" y="181" text-anchor="middle" fill="#FFFFFF" font-family="JetBrains Mono, monospace" font-weight="800" font-size="10">FREE JAVA JOKE</text>
+                        <!-- J-Hook -->
+                        <path d="M 365 235 L 365 255 Q 365 268 353 268 Q 343 268 343 256 L 348 260" fill="none" stroke="#38BDF8" stroke-width="3.5" stroke-linecap="round" filter="url(#neonGlow)" />
+                    </g>
+                </g>
+
+                <!-- Back Ocean Wave Layer -->
+                <g class="animate-wave-slow" opacity="0.55">
+                    <path d="M 0 475 Q 150 440 300 475 T 600 475 T 900 475 T 1200 475 T 1500 475 T 1800 475 T 2100 475 T 2400 475 L 2400 700 L 0 700 Z" fill="#4C1D95" />
+                </g>
+
+                <!-- Front Glowing Neon Wave Layer -->
+                <g class="animate-wave-fast" opacity="0.85">
+                    <path d="M 0 505 Q 150 540 300 505 T 600 505 T 900 505 T 1200 505 T 1500 505 T 1800 505 T 2100 505 T 2400 505 L 2400 700 L 0 700 Z" fill="url(#waveFront)" />
+                </g>
+            </svg>
+        </div>
+
+        <!-- Top Badge -->
+        <header class="w-full max-w-4xl flex items-center justify-center relative z-10 pt-2">
+            <span class="px-3.5 py-1.5 rounded-full bg-[#13072E]/80 backdrop-blur-md border border-purple-400/40 font-mono-code text-xs font-bold text-purple-200">
+                JOZIJUG // PROJECT LOOM PART 2 — ASHLY VUBA
+            </span>
+        </header>
+
+        <!-- Centered High-Impact Foreground Card -->
+        <div class="max-w-2xl w-full my-6 bg-[#13072E]/85 backdrop-blur-md border-2 border-pink-500/60 rounded-3xl p-6 sm:p-10 text-center relative z-10 shadow-2xl">
+            <!-- Prominent Neon PHISHING Stamp -->
+            <div class="inline-block mb-4">
+                <span class="phishing-stamp inline-block px-6 py-2 rounded-2xl border-4 border-pink-500 bg-pink-600/25 font-display text-2xl sm:text-4xl tracking-widest text-pink-300 uppercase">
+                    🎣 PHISHING
+                </span>
+            </div>
+
+            <h1 class="font-display text-3xl sm:text-5xl lg:text-6xl uppercase text-white leading-none mb-4 drop-shadow-lg">
+                YOU TRUST TOO EASILY! 😂🎣
+            </h1>
+
+            <p class="text-base sm:text-xl font-bold text-purple-100 leading-relaxed mb-7">
+                Scanning a random QR code at a <span class="text-pink-400 underline decoration-wavy">Cybersecurity Enthusiast’s</span> talk?! Bold move.
+                <br class="hidden sm:inline" />
+                Welcome to <span class="text-purple-300 font-extrabold">Project Loom Part 2</span> with Ashly! 💜☕
+            </p>
+
+            <!-- Interactive "I've Been Caught!" Counter Button -->
+            <div class="flex flex-col items-center gap-3">
+                <button id="btn-caught" class="px-7 py-4 rounded-2xl bg-gradient-to-r from-pink-500 via-purple-600 to-indigo-600 hover:brightness-110 active:scale-95 text-white font-display text-base sm:text-xl uppercase tracking-wide shadow-xl border-2 border-pink-300/60 transition-all cursor-pointer">
+                    I've Been Caught! 🐟 (<span id="caught-count">1</span>)
+                </button>
+                <span class="text-xs font-mono-code text-purple-300">
+                    (Rule #1 of FinTech Security: Never trust unverified QR codes!)
+                </span>
+            </div>
+        </div>
+
+        <!-- Bottom QR Code Card (Auto-points to your GitHub Pages URL!) -->
+        <footer class="max-w-xl w-full bg-[#13072E]/90 backdrop-blur-md border border-purple-400/40 rounded-3xl p-4 sm:p-5 relative z-10 shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="bg-white p-2.5 rounded-2xl border-2 border-pink-500 shadow-lg shrink-0">
+                <div id="qrcode-container" class="flex items-center justify-center"></div>
+            </div>
+
+            <div class="flex-1 text-center sm:text-left flex flex-col gap-2">
+                <p class="font-display text-sm sm:text-base uppercase text-white">
+                    📱 Share / Slide 2 QR Code
+                </p>
+                <p id="qr-mode-caption" class="text-xs font-mono-code text-purple-200 break-all">
+                    Auto-linked to this page URL!
+                </p>
+                <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2 pt-1">
+                    <button id="btn-download-qr" class="px-4 py-2 rounded-xl bg-gradient-to-r from-pink-600 to-purple-600 hover:brightness-110 text-white font-extrabold text-xs uppercase tracking-wider shadow-md cursor-pointer">
+                        ⬇️ Download QR PNG
+                    </button>
+                </div>
+            </div>
+        </footer>
+    </main>
+
+    <script>
+        const qrcodeContainer = document.getElementById('qrcode-container');
+        const qrModeCaption = document.getElementById('qr-mode-caption');
+
+        function renderQrCode(targetUrl) {
+            qrcodeContainer.innerHTML = '';
+            new QRCode(qrcodeContainer, {
+                text: targetUrl,
+                width: 130,
+                height: 130,
+                colorDark: '#13072E',
+                colorLight: '#FFFFFF',
+                correctLevel: QRCode.CorrectLevel.M
+            });
+        }
+
+        // Download QR Code as High-Res PNG for Slide 2
+        document.getElementById('btn-download-qr').addEventListener('click', () => {
+            const qrCanvas = qrcodeContainer.querySelector('canvas');
+            const qrImg = qrcodeContainer.querySelector('img');
+            let dataUrl = '';
+
+            if (qrCanvas) {
+                dataUrl = qrCanvas.toDataURL('image/png');
+            } else if (qrImg && qrImg.src) {
+                dataUrl = qrImg.src;
+            }
+
+            if (dataUrl) {
+                const link = document.createElement('a');
+                link.download = 'Bank4Z-Phishing-Joke-QR.png';
+                link.href = dataUrl;
+                link.click();
+            }
+        });
+
+        // Interactive "I've Been Caught!" Splash & Fish Confetti
+        let caughtCount = 1;
+        const caughtCountSpan = document.getElementById('caught-count');
+        const btnCaught = document.getElementById('btn-caught');
+
+        btnCaught.addEventListener('click', (e) => {
+            caughtCount++;
+            caughtCountSpan.textContent = caughtCount;
+
+            const emojis = ['🐟', '🎣', '😂', '💜', '🚨', '🐠'];
+            for (let i = 0; i < 10; i++) {
+                const span = document.createElement('span');
+                span.className = 'fish-particle';
+                span.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+                const offsetX = (Math.random() - 0.5) * 240;
+                span.style.left = `${e.clientX + offsetX}px`;
+                span.style.top = `${e.clientY - 10}px`;
+                document.body.appendChild(span);
+                setTimeout(() => span.remove(), 1500);
+            }
+        });
+
+        // Automatically encode the live GitHub Pages URL (or current window URL) into the QR code
+        window.onload = function () {
+            const pageUrl = window.location.href.startsWith('http')
+                ? window.location.href.split('#')[0]
+                : 'https://ashlyvuba.github.io/bank4z-phishing/';
+            renderQrCode(pageUrl);
+            qrModeCaption.textContent = pageUrl;
+        };
+    </script>
+</body>
+</html>
